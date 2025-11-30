@@ -20,16 +20,16 @@ export class TwitchAuthService {
   private authProvider: RefreshingAuthProvider | null = null;
   private readonly tokensFilePath: string;
   private readonly TWITCH_SCOPES = 'chat:read chat:edit';
+  private initializationPromise: Promise<void>;
 
   constructor(private readonly config: ConfigService) {
-    // Set token file path relative to project root
-    this.tokensFilePath = join(__dirname, '../../../data/twitch-tokens.json');
+    this.tokensFilePath = join(process.cwd(), 'data/twitch-tokens.json');
 
     // Asynchronously load tokens on service initialization
-    this.loadTokens()
-      .then((tokenData) => {
+    this.initializationPromise = this.loadTokens()
+      .then(async (tokenData) => {
         if (tokenData) {
-          this.initializeAuthProvider(tokenData);
+          await this.initializeAuthProvider(tokenData);
         }
       })
       .catch((error) => {
@@ -38,6 +38,15 @@ export class TwitchAuthService {
           error,
         );
       });
+  }
+
+  /**
+   * Waits for the service to complete initialization (token loading)
+   *
+   * @returns Promise that resolves when initialization is complete
+   */
+  async waitForInitialization(): Promise<void> {
+    return this.initializationPromise;
   }
 
   /**
@@ -93,7 +102,9 @@ export class TwitchAuthService {
     await this.saveTokens(tokenData);
 
     // Initialize auth provider with new tokens
-    this.initializeAuthProvider(tokenData);
+    await this.initializeAuthProvider(tokenData);
+
+    console.log('[TwitchAuthService] Authentication successful');
   }
 
   /**
@@ -122,7 +133,7 @@ export class TwitchAuthService {
    *
    * @param tokenData - The access token data to initialize with
    */
-  private initializeAuthProvider(tokenData: AccessToken): void {
+  private async initializeAuthProvider(tokenData: AccessToken): Promise<void> {
     const clientId = this.config.get('TWITCH_CLIENT_ID');
     const clientSecret = this.config.get('TWITCH_CLIENT_SECRET');
 
@@ -139,15 +150,18 @@ export class TwitchAuthService {
       clientSecret,
     });
 
-    // Add user tokens with chat intent
-    this.authProvider.addUserForToken(tokenData, ['chat']).catch((error) => {
-      console.error('[TwitchAuthService] Failed to add user tokens:', error);
-    });
+    // Add user tokens - this is all we need for chat
+    await this.authProvider.addUserForToken(tokenData, ['chat']);
 
     // Setup automatic token persistence on refresh
     this.authProvider.onRefresh((userId, newTokenData) => {
       console.log(`[TwitchAuthService] Tokens refreshed for user ${userId}`);
-      return this.saveTokens(newTokenData);
+      this.saveTokens(newTokenData).catch((error) =>
+        console.error(
+          '[TwitchAuthService] Failed to save refreshed tokens:',
+          error,
+        ),
+      );
     });
   }
 
@@ -183,7 +197,8 @@ export class TwitchAuthService {
   private async saveTokens(tokenData: AccessToken): Promise<void> {
     try {
       // Ensure directory exists
-      await mkdir(dirname(this.tokensFilePath), { recursive: true });
+      const dirPath = dirname(this.tokensFilePath);
+      await mkdir(dirPath, { recursive: true });
 
       // Write tokens to file
       await writeFile(
@@ -192,7 +207,7 @@ export class TwitchAuthService {
         'utf-8',
       );
 
-      console.log('[TwitchAuthService] Tokens saved to file successfully');
+      console.log('[TwitchAuthService] Tokens saved successfully');
     } catch (error) {
       console.error('[TwitchAuthService] Failed to save tokens:', error);
       throw error;

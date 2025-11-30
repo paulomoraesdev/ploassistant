@@ -25,7 +25,10 @@ export class TwitchService implements OnModuleInit, OnModuleDestroy {
    * Automatically connects the bot to Twitch chat if valid tokens are available.
    * Logs a warning if not authenticated, prompting manual OAuth flow.
    */
-  onModuleInit(): void {
+  async onModuleInit(): Promise<void> {
+    // Wait for TwitchAuthService to finish loading tokens
+    await this.authService.waitForInitialization();
+
     if (!this.authService.hasValidTokens()) {
       console.warn(
         '[TwitchService] No valid tokens found. Please authenticate at /twitch/authenticate',
