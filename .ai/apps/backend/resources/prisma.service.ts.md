@@ -549,14 +549,27 @@ constructor(private readonly configService: ConfigService) {
 
 ### Best Practices
 
-1. **Never Log Connection Strings**
+1. **Never Log Connection Strings or Access process.env Directly**
    ```typescript
-   // L DON'T DO
-   console.log('DB URL:', connectionString);
+   // ❌ DON'T DO
+   console.log('DB URL:', process.env.DATABASE_URL);
+   const connectionString = process.env.DATABASE_URL;
 
-   //  DO
+   // ✅ DO
    console.log('DB connected:', configService.has('DATABASE_URL'));
+   const connectionString = configService.get('DATABASE_URL');
    ```
+
+   **CRITICAL**: Always use ConfigService for environment variable access. Never access `process.env` directly. This ensures:
+   - Type-safe access to configuration
+   - Centralized configuration management
+   - Consistent patterns across the application
+   - Easier testing and mocking
+
+
+
+
+
 
 2. **Use Parameterized Queries**
    - Always use Prisma's query builder
