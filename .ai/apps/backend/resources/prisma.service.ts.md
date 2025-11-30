@@ -49,27 +49,45 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
 
 ## Integration
 
-### Environment Configuration
+### ConfigService Dependency
 
-PrismaService uses environment variables directly for database configuration:
+PrismaService depends on ConfigService for environment configuration:
 
 ```typescript
-const process.env.DATABASE_URL = process.env.DATABASE_URL;
-const adapter = new PrismaPg({ process.env.DATABASE_URL });
-super({ adapter });
+constructor(private readonly configService: ConfigService)
 ```
 
-**Configuration Requirements**:
-- `DATABASE_URL`: PostgreSQL connection string (required)
-- Loaded via `dotenv` in ConfigModule
-- Available through `process.env` at runtime
+**Configuration Flow**:
+1. ConfigService injected via constructor
+2. Validates `DATABASE_URL` exists using `configService.has()`
+3. Retrieves connection string using `configService.get()`
+4. Fails fast if DATABASE_URL is missing
+
+**Why ConfigService Instead of process.env**:
+- Centralized configuration management
+- Type-safe access to environment variables
+- Consistent pattern across the application
+- Easier to test and mock
 
 ### Database Connection
 
 **Adapter Setup** (Required for Prisma v7 + PostgreSQL):
 ```typescript
-const process.env.DATABASE_URL = process.env.DATABASE_URL;
-const adapter = new PrismaPg({ process.env.DATABASE_URL });
+// Validate DATABASE_URL exists
+if (!configService.has('DATABASE_URL')) {
+  throw new Error(
+    'DATABASE_URL environment variable is required for database connection. ' +
+    'Please ensure it is set in your .env file or environment.'
+  );
+}
+
+// Get connection string from ConfigService
+const connectionString = configService.get('DATABASE_URL')!;
+
+// Initialize PostgreSQL adapter
+const adapter = new PrismaPg({ connectionString });
+
+// Initialize PrismaClient with adapter
 super({ adapter });
 ```
 
@@ -80,9 +98,10 @@ super({ adapter });
 - Uses `pg` driver under the hood
 
 **Connection Lifecycle**:
-1. Adapter created in constructor with DATABASE_URL
-2. Connection established in `onModuleInit` via `$connect()`
-3. Connection closed in `onModuleDestroy` via `$disconnect()`
+1. ConfigService validates DATABASE_URL in constructor
+2. Adapter created with connection string from ConfigService
+3. Connection established in `onModuleInit` via `$connect()`
+4. Connection closed in `onModuleDestroy` via `$disconnect()`
 
 ## Lifecycle Management
 
@@ -386,7 +405,7 @@ For integration tests with real database, use test database:
 ```typescript
 beforeAll(async () => {
   // Use test DATABASE_URL
-  process.env.DATABASE_URL = 'postgresql://test:test@localhost:5432/testdb';
+  connectionString = 'postgresql://test:test@localhost:5432/testdb';
 });
 
 afterAll(async () => {
@@ -479,11 +498,17 @@ generator client {
 **Root Cause**: PrismaService not properly initialized with adapter
 
 **Solutions**:
-1. Verify adapter is created in constructor:
+1. Verify adapter is created in constructor with ConfigService:
 ```typescript
-constructor() {
-  const process.env.DATABASE_URL = process.env.DATABASE_URL;
-  const adapter = new PrismaPg({ process.env.DATABASE_URL });
+constructor(private readonly configService: ConfigService) {
+  if (!configService.has('DATABASE_URL')) {
+    throw new Error(
+      'DATABASE_URL environment variable is required for database connection. ' +
+        'Please ensure it is set in your .env file or environment.',
+    );
+  }
+  const connectionString = configService.get('DATABASE_URL')!;
+  const adapter = new PrismaPg({ connectionString });
   super({ adapter });
 }
 ```
@@ -527,10 +552,10 @@ constructor() {
 1. **Never Log Connection Strings**
    ```typescript
    // L DON'T DO
-   console.log('DB URL:', process.env.DATABASE_URL);
+   console.log('DB URL:', connectionString);
 
    //  DO
-   console.log('DB connected:', !!process.env.DATABASE_URL);
+   console.log('DB connected:', configService.has('DATABASE_URL'));
    ```
 
 2. **Use Parameterized Queries**
