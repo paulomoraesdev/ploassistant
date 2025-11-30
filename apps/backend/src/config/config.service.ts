@@ -15,6 +15,7 @@ interface EnvConfig {
   TWITCH_CLIENT_ID: string | null;
   TWITCH_CLIENT_SECRET: string | null;
   TWITCH_CHANNEL: string | null;
+  TWITCH_REDIRECT_URI: string | null;
 }
 
 /**
@@ -46,6 +47,7 @@ export class ConfigService {
       ['TWITCH_CLIENT_ID', process.env.TWITCH_CLIENT_ID ?? null],
       ['TWITCH_CLIENT_SECRET', process.env.TWITCH_CLIENT_SECRET ?? null],
       ['TWITCH_CHANNEL', process.env.TWITCH_CHANNEL ?? null],
+      ['TWITCH_REDIRECT_URI', process.env.TWITCH_REDIRECT_URI ?? null],
     ]);
   }
 
