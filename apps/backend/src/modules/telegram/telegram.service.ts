@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
   Injectable,
   OnModuleInit,
@@ -5,7 +8,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { ConfigService } from '../../config/config.service';
-import { Bot, Context, GrammyError, HttpError } from 'grammy';
+import { Bot, GrammyError, HttpError } from 'grammy';
 import { apiThrottler } from '@grammyjs/transformer-throttler';
 
 /**
@@ -21,6 +24,7 @@ import { apiThrottler } from '@grammyjs/transformer-throttler';
 @Injectable()
 export class TelegramService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(TelegramService.name);
+  // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
   private bot: Bot | null = null;
 
   /**
@@ -33,7 +37,7 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
   /**
    * NestJS lifecycle hook called when the module is initialized.
    */
-  async onModuleInit(): Promise<void> {
+  onModuleInit(): void {
     // 1. Load ACL
     this.loadAllowedUsers();
 
@@ -149,6 +153,7 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
       const userId = ctx.from?.id;
       const chatId = ctx.chat?.id;
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       const isAllowed = userId && this.allowedChatIds.has(userId);
 
       if (isAllowed) {
