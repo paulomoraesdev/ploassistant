@@ -6,6 +6,7 @@ import { TwitchCommandService } from './twitch-command.service';
 import { TwitchEventService } from './twitch-event.service';
 import { TwitchEventSubService } from './twitch-eventsub.service';
 import { PingCommand } from './commands/ping.command';
+import { TwitchClientProvider } from './twitch.provider';
 
 @Module({
   imports: [],
@@ -16,6 +17,7 @@ import { PingCommand } from './commands/ping.command';
     TwitchCommandService,
     TwitchEventService,
     TwitchEventSubService,
+    TwitchClientProvider,
     // Registra os comandos como providers
     PingCommand,
   ],

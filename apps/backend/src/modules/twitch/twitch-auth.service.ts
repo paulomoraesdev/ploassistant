@@ -19,7 +19,14 @@ import { join, dirname } from 'path';
 export class TwitchAuthService {
   private authProvider: RefreshingAuthProvider | null = null;
   private readonly tokensFilePath: string;
-  private readonly TWITCH_SCOPES = 'chat:read chat:edit';
+  private readonly TWITCH_SCOPES = [
+    'chat:read',
+    'chat:edit',
+    'channel:read:subscriptions',
+    'moderator:read:followers',
+    'channel:read:redemptions',
+    'channel:manage:redemptions',
+  ].join(' ');
   private initializationPromise: Promise<void>;
 
   constructor(private readonly config: ConfigService) {
