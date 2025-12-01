@@ -69,9 +69,9 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
         onStart: (botInfo) => {
           const startupMessage = `✅ Telegram Bot started as @${botInfo.username}`;
           this.logger.log(startupMessage);
-          this.allowedChatIds.forEach((chatId) => {
-            void this.sendMessage(chatId, startupMessage);
-          });
+          // this.allowedChatIds.forEach((chatId) => {
+          //   void this.sendMessage(chatId, startupMessage);
+          // });
         },
       });
     } catch (error) {

@@ -5,9 +5,16 @@ import { ConfigModule } from './config/config.module';
 import { DatabaseModule } from './database/database.module';
 import { TwitchModule } from './modules/twitch/twitch.module';
 import { TelegramModule } from './modules/telegram/telegram.module';
+import { AiModule } from './modules/ai/ai.module';
 
 @Module({
-  imports: [ConfigModule, DatabaseModule, TwitchModule, TelegramModule],
+  imports: [
+    ConfigModule,
+    DatabaseModule,
+    TwitchModule,
+    TelegramModule,
+    AiModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })

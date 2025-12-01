@@ -15,7 +15,12 @@ interface EnvConfig {
   TWITCH_CLIENT_ID: string | null;
   TWITCH_CLIENT_SECRET: string | null;
   TWITCH_CHANNEL: string | null;
+  TWITCH_BOT_NAME: string | null;
   TWITCH_REDIRECT_URI: string | null;
+  OLLAMA_BASE_URL: string | null;
+  OLLAMA_MODEL: string | null;
+  OPENROUTER_API_KEY: string | null;
+  OPENAI_API_KEY: string | null;
 }
 
 /**
@@ -46,8 +51,13 @@ export class ConfigService {
       ['AUTHORIZED_USER_IDS', process.env.AUTHORIZED_USER_IDS ?? null],
       ['TWITCH_CLIENT_ID', process.env.TWITCH_CLIENT_ID ?? null],
       ['TWITCH_CLIENT_SECRET', process.env.TWITCH_CLIENT_SECRET ?? null],
+      ['TWITCH_BOT_NAME', process.env.TWITCH_BOT_NAME ?? null],
       ['TWITCH_CHANNEL', process.env.TWITCH_CHANNEL ?? null],
       ['TWITCH_REDIRECT_URI', process.env.TWITCH_REDIRECT_URI ?? null],
+      ['OLLAMA_BASE_URL', process.env.OLLAMA_BASE_URL ?? null],
+      ['OLLAMA_MODEL', process.env.OLLAMA_MODEL ?? null],
+      ['OPENROUTER_API_KEY', process.env.OPENROUTER_API_KEY ?? null],
+      ['OPENAI_API_KEY', process.env.OPENAI_API_KEY ?? null],
     ]);
   }
 
