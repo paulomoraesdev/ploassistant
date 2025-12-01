@@ -4,18 +4,49 @@ import { TwitchAuthService } from './twitch-auth.service';
 import { ChatClient } from '@twurple/chat';
 
 /**
- * Injection Token for the Twitch Chat Client.
- * Use this string (or constant) to inject the client into services.
+ * Injection token for the Twitch ChatClient
+ *
+ * This string token is used with @Inject() to inject the ChatClient instance
+ * into services that need direct access to Twitch chat.
+ *
+ * @example
+ * ```typescript
+ * constructor(
+ *   @Inject(TWITCH_CHAT_CLIENT) private readonly chatClient: ChatClient | null
+ * ) {}
+ * ```
  */
 export const TWITCH_CHAT_CLIENT = 'TWITCH_CHAT_CLIENT';
 
 /**
- * TwitchClientProvider
+ * TwitchClientProvider - Factory provider for ChatClient creation
  *
- * This factory provider handles the asynchronous creation of the ChatClient.
- * It waits for authentication to be ready and configures the client properly.
- * This allows the ChatClient instance to be injected directly into any service
- * (ChatService, EventSubService, etc.) without circular dependencies.
+ * This is a NestJS factory provider that handles the asynchronous creation and
+ * initialization of the Twitch ChatClient instance. It implements the Factory Pattern
+ * to solve several architectural challenges:
+ *
+ * Benefits of Factory Pattern:
+ * 1. **Async Initialization**: Waits for TwitchAuthService to load tokens before creating client
+ * 2. **Circular Dependency Prevention**: Avoids circular deps between services
+ * 3. **Single Instance**: Ensures one ChatClient is shared across all consumers
+ * 4. **Graceful Failure**: Returns null if authentication fails, allowing services to handle gracefully
+ * 5. **Centralized Configuration**: All ChatClient configuration in one place
+ *
+ * Creation Flow:
+ * 1. Wait for TwitchAuthService to complete token loading
+ * 2. Validate tokens are available
+ * 3. Retrieve auth provider and channel configuration
+ * 4. Create ChatClient with auth and channel
+ * 5. Connect to Twitch chat immediately
+ * 6. Return client instance (or null on failure)
+ *
+ * Usage:
+ * - Injected into TwitchChatService for message handling
+ * - Injected into TwitchEventSubService for event responses
+ * - Can be injected into any service that needs chat access
+ *
+ * @see TwitchChatService for primary consumer
+ * @see TwitchEventSubService for event-driven usage
  */
 export const TwitchClientProvider: Provider = {
   provide: TWITCH_CHAT_CLIENT,

@@ -11,14 +11,51 @@ import { join, dirname } from 'path';
 /**
  * TwitchAuthService - Manages Twitch OAuth authentication and token persistence
  *
- * This service handles the complete OAuth flow for Twitch bot authentication,
- * including token exchange, automatic refresh, and file-based persistence.
- * It provides a RefreshingAuthProvider instance to TwitchService for chat client initialization.
+ * This service handles the complete OAuth 2.0 flow for Twitch bot authentication,
+ * including authorization URL generation, token exchange, automatic token refresh,
+ * and file-based token persistence.
+ *
+ * Key Features:
+ * - OAuth 2.0 authorization URL generation with required scopes
+ * - Authorization code exchange for access/refresh tokens
+ * - Automatic token refresh via RefreshingAuthProvider
+ * - File-based token storage (data/twitch-tokens.json)
+ * - Async initialization pattern with waitForInitialization()
+ * - Provides RefreshingAuthProvider to other services
+ *
+ * OAuth Scopes Requested:
+ * - chat:read - Read messages from chat
+ * - chat:edit - Send messages to chat
+ * - channel:read:subscriptions - Access subscription events
+ * - moderator:read:followers - Read follower information
+ * - channel:read:redemptions - Read channel point redemptions
+ * - channel:manage:redemptions - Manage channel point redemptions
+ *
+ * Token Storage:
+ * Tokens are stored in data/twitch-tokens.json with the following structure:
+ * {
+ *   accessToken: string,
+ *   refreshToken: string,
+ *   expiresIn: number,
+ *   obtainmentTimestamp: number,
+ *   scope: string[]
+ * }
+ *
+ * @see TwitchClientProvider for ChatClient creation using this service
+ * @see TwitchEventSubService for EventSub initialization using this service
  */
 @Injectable()
 export class TwitchAuthService {
+  /** RefreshingAuthProvider instance for automatic token refresh */
   private authProvider: RefreshingAuthProvider | null = null;
+
+  /** File path where tokens are persisted */
   private readonly tokensFilePath: string;
+
+  /**
+   * OAuth scopes requested from Twitch
+   * These permissions define what the bot can access and do
+   */
   private readonly TWITCH_SCOPES = [
     'chat:read',
     'chat:edit',
@@ -27,8 +64,18 @@ export class TwitchAuthService {
     'channel:read:redemptions',
     'channel:manage:redemptions',
   ].join(' ');
+
+  /** Promise that resolves when token loading and initialization is complete */
   private initializationPromise: Promise<void>;
 
+  /**
+   * Creates an instance of TwitchAuthService
+   *
+   * Automatically begins asynchronous token loading from file system.
+   * Other services should call waitForInitialization() before using this service.
+   *
+   * @param config - Configuration service for accessing environment variables
+   */
   constructor(private readonly config: ConfigService) {
     this.tokensFilePath = join(process.cwd(), 'data/twitch-tokens.json');
 
