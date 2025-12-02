@@ -108,16 +108,17 @@ export class TwitchChatService implements OnModuleInit, OnModuleDestroy {
     if (!this.chatClient) return;
 
     // --- MESSAGE HANDLER ---
-    this.chatClient.onMessage((channel, user, message, msg) => {
+    this.chatClient.onMessage((channel, user, message) => {
       // 1. Ignore bot's own messages to prevent infinite loops
       const isMe =
-        user.toLowerCase() === this.config.get('TWITCH_CHANNEL')?.toLowerCase();
+        user.toLowerCase() ===
+        this.config.get('TWITCH_BOT_NAME')?.toLowerCase();
       if (isMe) return;
 
       this.logger.debug(`[${channel}] ${user}: ${message}`);
 
       // 2. Delegate to CommandService for command routing
-      this.commandService.handleMessage({
+      void this.commandService.handleMessage({
         channel,
         user,
         message,
